@@ -31,13 +31,16 @@ def initialize_facilitator() -> Optional[CompanyAlignmentFacilitator]:
     try:
         logger.info("Initializing Company Alignment Facilitator...")
         facilitator = CompanyAlignmentFacilitator()
-        logger.info("✅ Company Alignment Facilitator initialized successfully")
+        
+        if facilitator.is_demo_mode:
+            logger.info("✅ Company Alignment Facilitator initialized in DEMO MODE")
+            print("🔑 Demo Mode: Running without OpenAI API key")
+            print("   You can explore the interface and see example functionality")
+            print("   Set OPENAI_API_KEY environment variable for full features")
+        else:
+            logger.info("✅ Company Alignment Facilitator initialized successfully")
+        
         return facilitator
-    except ValueError as e:
-        logger.error(f"❌ Configuration error: {e}")
-        print(f"Configuration error: {e}")
-        print("Please set your OPENAI_API_KEY environment variable")
-        return None
     except Exception as e:
         logger.error(f"❌ Initialization error: {e}")
         print(f"Initialization error: {e}")

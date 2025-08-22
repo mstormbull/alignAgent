@@ -21,16 +21,23 @@ class CompanyAlignmentFacilitator:
     
     def __init__(self):
         """Initialize the facilitator with all components"""
-        # Validate configuration
-        Config.validate()
+        # Check configuration
+        self.is_demo_mode = Config.is_demo_mode()
         Config.create_directories()
         
         # Initialize components
         self.data_manager = DataManager()
-        self.ai_interviewer = AIInterviewer()
-        self.report_generator = ReportGenerator(self.data_manager)
         
-        logger.info("Company Alignment Facilitator initialized successfully")
+        if not self.is_demo_mode:
+            # Full initialization with AI components
+            self.ai_interviewer = AIInterviewer()
+            self.report_generator = ReportGenerator(self.data_manager)
+            logger.info("Company Alignment Facilitator initialized successfully")
+        else:
+            # Demo mode initialization
+            self.ai_interviewer = None
+            self.report_generator = None
+            logger.info("Company Alignment Facilitator initialized in DEMO MODE (no OpenAI API key)")
     
     def start_new_session(self, topic: str) -> str:
         """
@@ -42,6 +49,9 @@ class CompanyAlignmentFacilitator:
         Returns:
             Success message
         """
+        if self.is_demo_mode:
+            return "🔑 Demo Mode: Please set your OPENAI_API_KEY environment variable to start real sessions. You can explore the interface and see example data."
+        
         try:
             if not topic.strip():
                 return "Please enter a valid alignment topic."
@@ -66,6 +76,9 @@ class CompanyAlignmentFacilitator:
         Returns:
             Tuple of (ai_response, is_complete, error_message)
         """
+        if self.is_demo_mode:
+            return "", False, "🔑 Demo Mode: Please set your OPENAI_API_KEY environment variable to use the AI interviewer."
+        
         try:
             # Conduct the interview
             ai_response, is_complete, error = self.ai_interviewer.conduct_interview(message)
@@ -112,6 +125,9 @@ class CompanyAlignmentFacilitator:
         Returns:
             Generated report as markdown text
         """
+        if self.is_demo_mode:
+            return self._generate_demo_report()
+        
         try:
             # Generate the report
             report = self.report_generator.generate_alignment_report(topic)
@@ -175,6 +191,8 @@ class CompanyAlignmentFacilitator:
         Returns:
             Current session or None if no active session
         """
+        if self.is_demo_mode:
+            return None
         return self.ai_interviewer.get_current_session()
     
     def is_session_active(self) -> bool:
@@ -184,6 +202,8 @@ class CompanyAlignmentFacilitator:
         Returns:
             True if session is active, False otherwise
         """
+        if self.is_demo_mode:
+            return False
         return self.ai_interviewer.is_session_active()
     
     def get_statistics(self) -> dict:
@@ -195,10 +215,19 @@ class CompanyAlignmentFacilitator:
         """
         try:
             stats = self.data_manager.get_statistics()
-            report_stats = self.report_generator.get_report_statistics()
             
-            # Combine statistics
-            combined_stats = {**stats, **report_stats}
+            if not self.is_demo_mode:
+                report_stats = self.report_generator.get_report_statistics()
+                # Combine statistics
+                combined_stats = {**stats, **report_stats}
+            else:
+                # Demo mode statistics
+                combined_stats = {
+                    **stats,
+                    "demo_mode": True,
+                    "openai_api_key_status": "Not Set",
+                    "ai_features_available": False
+                }
             
             # Add session status
             combined_stats["session_active"] = self.is_session_active()
@@ -214,6 +243,7 @@ class CompanyAlignmentFacilitator:
             return {
                 "total_interviews": 0,
                 "session_active": False,
+                "demo_mode": self.is_demo_mode,
                 "error": str(e)
             }
     
@@ -246,4 +276,45 @@ class CompanyAlignmentFacilitator:
             logger.info("Facilitator cleanup completed")
             
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}") 
+            logger.error(f"Error during cleanup: {e}")
+    
+    def _generate_demo_report(self) -> str:
+        """Generate a demo report for demonstration purposes"""
+        return """# Company Alignment Facilitator - Demo Report
+
+## 🔑 Demo Mode Active
+
+This is a demonstration of what an alignment report would look like. To generate real reports with actual interview data, please:
+
+1. **Set your OpenAI API key**: `export OPENAI_API_KEY="your-api-key-here"`
+2. **Restart the application**: The AI interviewer will then be available
+3. **Conduct interviews**: Use the Employee Interview tab to gather responses
+4. **Generate real reports**: Click this button again for AI-powered analysis
+
+## Sample Report Structure
+
+### Executive Summary
+When you have real interview data, this section will contain an AI-generated summary of all the key themes, consensus areas, and misalignments discovered across your team interviews.
+
+### Analysis Details
+- **Total Interviews Analyzed**: 0 (Demo Mode)
+- **Alignment Topic**: No active session
+- **Report Generated**: Demo Mode
+
+### Key Features Available with API Key
+
+✅ **AI-Powered Interviews**: Contextual follow-up questions  
+✅ **Automatic Transcription**: Complete conversation logging  
+✅ **Intelligent Analysis**: Pattern recognition across responses  
+✅ **Actionable Insights**: Specific recommendations for alignment  
+
+### Getting Started
+
+1. **Get OpenAI API Key**: Visit [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. **Set Environment Variable**: `export OPENAI_API_KEY="sk-..."`
+3. **Restart Application**: `python main.py`
+4. **Start First Session**: Enter a topic and begin interviewing team members
+
+---
+*This is a demo report. Real reports will contain AI-generated insights from your actual team interviews.*
+""" 

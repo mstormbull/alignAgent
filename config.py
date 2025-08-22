@@ -33,8 +33,13 @@ class Config:
     def validate(cls) -> bool:
         """Validate that all required configuration is present"""
         if not cls.OPENAI_API_KEY:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
+            return False  # Allow demo mode instead of raising error
         return True
+    
+    @classmethod
+    def is_demo_mode(cls) -> bool:
+        """Check if running in demo mode (no API key)"""
+        return not cls.OPENAI_API_KEY
     
     @classmethod
     def create_directories(cls) -> None:

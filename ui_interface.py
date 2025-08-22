@@ -23,7 +23,18 @@ class UIManager:
         
         with gr.Blocks(title="Company Alignment Facilitator", theme=gr.themes.Soft()) as demo:
             gr.Markdown("# 🎯 Company Alignment Facilitator")
-            gr.Markdown("An AI-powered tool for conducting alignment interviews and generating comprehensive reports.")
+            
+            # Show demo mode warning if applicable
+            if self.facilitator.is_demo_mode:
+                gr.Markdown("""
+                ## 🔑 Demo Mode Active
+                
+                **You're running in demo mode** - Set your `OPENAI_API_KEY` environment variable and restart to enable full AI features.
+                
+                You can still explore the interface and see example reports!
+                """)
+            else:
+                gr.Markdown("An AI-powered tool for conducting alignment interviews and generating comprehensive reports.")
             
             with gr.Tabs():
                 # Tab 1: Admin & Reporting
@@ -82,8 +93,7 @@ class UIManager:
         report_output = gr.Textbox(
             label="Alignment Report",
             lines=20,
-            max_lines=30,
-            interactive=False
+            max_lines=30
         )
         
         # Event handlers
@@ -129,10 +139,7 @@ class UIManager:
                 ["I think our main priority should be improving customer satisfaction."],
                 ["We need better communication between departments."],
                 ["I'm concerned about our current project timeline."]
-            ],
-            retry_btn=None,
-            undo_btn=None,
-            clear_btn="Clear Chat"
+            ]
         )
     
     def _create_statistics_tab(self):
@@ -143,15 +150,13 @@ class UIManager:
             refresh_stats_btn = gr.Button("🔄 Refresh Statistics", variant="primary")
         
         stats_output = gr.JSON(
-            label="System Statistics",
-            interactive=False
+            label="System Statistics"
         )
         
         gr.Markdown("## Session Status")
         
         status_output = gr.Textbox(
             label="Current Session Status",
-            interactive=False,
             lines=3
         )
         

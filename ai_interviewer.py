@@ -35,9 +35,8 @@ class AIInterviewer:
         
         # Custom prompt template for the interviewer
         interviewer_prompt = PromptTemplate(
-            input_variables=["history", "input", "topic"],
+            input_variables=["history", "input"],
             template="""You are a professional, neutral, and curious researcher conducting an alignment interview. 
-Your goal is to understand the employee's perspective on the topic: {topic}
 
 Guidelines:
 - Be professional, warm, and genuinely curious
@@ -110,8 +109,7 @@ To get started, could you share your initial thoughts on this topic? What does i
             
             # Generate AI response
             ai_response = self.conversation_chain.predict(
-                input=user_message,
-                topic=self.current_session.topic
+                input=user_message
             )
             
             # Add AI response to session
