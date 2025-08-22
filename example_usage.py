@@ -7,7 +7,9 @@ programmatically without the Gradio interface.
 """
 
 import os
-from main import CompanyAlignmentFacilitator
+import sys
+from facilitator import CompanyAlignmentFacilitator
+from config import Config
 
 def example_interview_workflow():
     """Example workflow showing how to conduct interviews and generate reports"""
@@ -38,23 +40,21 @@ def example_interview_workflow():
     
     # Conduct the interview
     print(f"\n📝 Conducting interview with {len(example_responses)} responses...")
-    conversation_history = []
     
     for i, response in enumerate(example_responses, 1):
         print(f"\n--- Turn {i} ---")
         print(f"Employee: {response}")
         
         # Get AI response
-        ai_response, history, error = facilitator.conduct_interview(response, conversation_history)
+        ai_response, is_complete, error = facilitator.conduct_interview(response)
         
         if error:
             print(f"Error: {error}")
             break
         
         print(f"AI Interviewer: {ai_response}")
-        conversation_history = history
         
-        if i >= facilitator.max_turns:
+        if is_complete:
             print("\n✅ Interview completed!")
             break
     
@@ -118,22 +118,24 @@ def example_multiple_interviews():
     # Conduct multiple interviews
     for i, responses in enumerate(interview_scenarios, 1):
         print(f"\n--- Conducting Interview {i} ---")
-        conversation_history = []
         
         for j, response in enumerate(responses, 1):
             print(f"Turn {j}: {response[:50]}...")
-            ai_response, history, error = facilitator.conduct_interview(response, conversation_history)
+            ai_response, is_complete, error = facilitator.conduct_interview(response)
             
             if error:
                 print(f"Error: {error}")
                 break
             
-            conversation_history = history
-            
-            if j >= facilitator.max_turns:
+            if is_complete:
                 break
         
         print(f"Interview {i} completed!")
+        
+        # End current session and start new one for next interview
+        if i < len(interview_scenarios):
+            facilitator.end_session()
+            facilitator.start_new_session(topic)
     
     # Generate comprehensive report
     print(f"\n📊 Generating comprehensive alignment report...")
@@ -148,7 +150,75 @@ def example_multiple_interviews():
     facilitator.end_session()
     print(f"\n✅ All interviews completed and session ended!")
 
-if __name__ == "__main__":
+def example_topic_specific_reports():
+    """Example showing how to generate topic-specific and comparative reports"""
+    
+    try:
+        facilitator = CompanyAlignmentFacilitator()
+        print("✅ Facilitator initialized for topic-specific reports example")
+    except ValueError as e:
+        print(f"❌ Initialization failed: {e}")
+        return
+    
+    # Generate topic-specific report
+    print(f"\n📋 Generating topic-specific report for 'Remote work'...")
+    try:
+        topic_report = facilitator.generate_topic_specific_report("Remote work")
+        print("Topic-specific report generated successfully!")
+        print("=" * 40)
+        print("TOPIC-SPECIFIC REPORT:")
+        print("=" * 40)
+        print(topic_report[:800] + "..." if len(topic_report) > 800 else topic_report)
+    except Exception as e:
+        print(f"No data found for topic-specific report: {e}")
+    
+    # Generate comparative report
+    print(f"\n📈 Generating comparative report...")
+    try:
+        comparative_report = facilitator.generate_comparative_report([
+            "Remote work", 
+            "Team collaboration", 
+            "Communication"
+        ])
+        print("Comparative report generated successfully!")
+        print("=" * 40)
+        print("COMPARATIVE REPORT:")
+        print("=" * 40)
+        print(comparative_report[:800] + "..." if len(comparative_report) > 800 else comparative_report)
+    except Exception as e:
+        print(f"No data found for comparative report: {e}")
+
+def example_statistics():
+    """Example showing how to get system statistics"""
+    
+    try:
+        facilitator = CompanyAlignmentFacilitator()
+        print("✅ Facilitator initialized for statistics example")
+    except ValueError as e:
+        print(f"❌ Initialization failed: {e}")
+        return
+    
+    # Get system statistics
+    print(f"\n📊 Getting system statistics...")
+    stats = facilitator.get_statistics()
+    
+    print("System Statistics:")
+    print("=" * 30)
+    for key, value in stats.items():
+        print(f"{key}: {value}")
+    
+    # Check session status
+    if facilitator.is_session_active():
+        session = facilitator.get_current_session()
+        print(f"\nCurrent session:")
+        print(f"Topic: {session.topic}")
+        print(f"Turns: {session.turns}/{session.max_turns}")
+        print(f"Active: {session.is_active}")
+    else:
+        print(f"\nNo active session")
+
+def main():
+    """Main example function"""
     print("Company Alignment Facilitator - Example Usage")
     print("=" * 50)
     
@@ -157,18 +227,46 @@ if __name__ == "__main__":
         print("❌ OPENAI_API_KEY environment variable not set!")
         print("Please set your OpenAI API key before running this example.")
         print("Example: export OPENAI_API_KEY='your-api-key-here'")
-        exit(1)
+        sys.exit(1)
     
     print("Choose an example to run:")
     print("1. Single interview workflow")
     print("2. Multiple interviews for comprehensive report")
+    print("3. Topic-specific and comparative reports")
+    print("4. System statistics")
+    print("5. Run all examples")
     
-    choice = input("\nEnter your choice (1 or 2): ").strip()
+    choice = input("\nEnter your choice (1-5): ").strip()
     
     if choice == "1":
         example_interview_workflow()
     elif choice == "2":
         example_multiple_interviews()
+    elif choice == "3":
+        example_topic_specific_reports()
+    elif choice == "4":
+        example_statistics()
+    elif choice == "5":
+        print("\n" + "="*60)
+        print("RUNNING ALL EXAMPLES")
+        print("="*60)
+        
+        print("\n1. Single interview workflow:")
+        example_interview_workflow()
+        
+        print("\n2. Multiple interviews:")
+        example_multiple_interviews()
+        
+        print("\n3. Topic-specific reports:")
+        example_topic_specific_reports()
+        
+        print("\n4. Statistics:")
+        example_statistics()
+        
+        print("\n✅ All examples completed!")
     else:
         print("Invalid choice. Running single interview workflow...")
-        example_interview_workflow() 
+        example_interview_workflow()
+
+if __name__ == "__main__":
+    main() 

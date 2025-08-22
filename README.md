@@ -71,10 +71,20 @@ The application will start a local web server (typically at `http://localhost:78
 
 ```
 alignAgent-1/
-├── main.py                 # Main application file
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── conversations/         # Directory for saved interview transcripts
+├── main.py                 # Application entry point
+├── config.py              # Configuration management
+├── models.py              # Data structures and types
+├── ai_interviewer.py      # AI conversation logic
+├── data_manager.py        # Data persistence
+├── report_generator.py    # Report generation
+├── facilitator.py         # Main orchestrator
+├── ui_interface.py        # User interface
+├── tests.py              # Unit tests
+├── example_usage.py      # Usage examples
+├── setup.py              # Setup script
+├── requirements.txt      # Python dependencies
+├── README.md            # This file
+├── conversations/       # Directory for saved interview transcripts
 │   ├── interview_2025-01-21_14-30-15.json
 │   ├── interview_2025-01-21_15-45-22.json
 │   └── ...
@@ -82,12 +92,26 @@ alignAgent-1/
 
 ## Technical Architecture
 
+### Modular Design
+
+The application follows a clean, modular architecture with clear separation of concerns:
+
+1. **`config.py`**: Centralized configuration management
+2. **`models.py`**: Data structures and type definitions
+3. **`ai_interviewer.py`**: AI conversation logic and interview management
+4. **`data_manager.py`**: File operations and data persistence
+5. **`report_generator.py`**: AI-powered analysis and report generation
+6. **`facilitator.py`**: Main orchestrator coordinating all components
+7. **`ui_interface.py`**: Gradio user interface management
+8. **`main.py`**: Application entry point
+
 ### Core Components
 
-1. **CompanyAlignmentFacilitator Class**: Main orchestrator handling all business logic
-2. **LangChain Integration**: Uses ConversationChain for interviews and map-reduce summarization for reports
-3. **Gradio Interface**: Modern web UI with tabbed interface for different workflows
-4. **Data Persistence**: JSON-based storage of conversation transcripts
+1. **CompanyAlignmentFacilitator**: Main orchestrator handling all business logic
+2. **AIInterviewer**: Stateful conversational AI using LangChain
+3. **DataManager**: File operations and conversation storage
+4. **ReportGenerator**: AI-powered analysis using map-reduce summarization
+5. **UIManager**: Modern Gradio interface with tabbed workflows
 
 ### AI Interviewer Behavior
 
@@ -113,10 +137,11 @@ The report generation uses LangChain's map-reduce strategy:
 
 ### Customization Options
 
-In `main.py`, you can modify:
-- `max_turns`: Number of conversation turns per interview (default: 5)
-- `temperature`: AI response creativity (default: 0.7)
-- `chunk_size`: Document processing size for reports (default: 4000)
+In `config.py`, you can modify:
+- `MAX_INTERVIEW_TURNS`: Number of conversation turns per interview (default: 5)
+- `OPENAI_TEMPERATURE`: AI response creativity (default: 0.7)
+- `CHUNK_SIZE`: Document processing size for reports (default: 4000)
+- `OPENAI_MODEL`: LLM model to use (default: "gpt-4-turbo-preview")
 
 ## Troubleshooting
 
@@ -144,10 +169,70 @@ The application includes comprehensive logging. Check the console output for det
 
 ## Security Considerations
 
-- API keys are loaded from environment variables (not hardcoded)
-- Interview data is stored locally in JSON format
-- No data is transmitted to external services beyond OpenAI API calls
-- Consider implementing additional security measures for production use
+### API Key Security
+- **Environment Variables**: API keys are loaded from environment variables (not hardcoded)
+- **No Hardcoded Secrets**: No private keys, passwords, or credentials are stored in the code
+- **Secure Storage**: Use environment variables or `.env` files (never commit these to version control)
+
+### Data Security
+- **Local Storage**: Interview data is stored locally in JSON format
+- **No External Transmission**: No data is transmitted to external services beyond OpenAI API calls
+- **File Permissions**: Ensure proper file permissions on the `conversations/` directory
+
+### Best Practices
+- **Git Ignore**: The `.gitignore` file prevents accidental commit of sensitive files
+- **Environment Files**: Never commit `.env` files or files containing API keys
+- **Production Security**: Consider implementing additional security measures for production use
+- **API Key Rotation**: Regularly rotate your OpenAI API keys
+- **Access Control**: Restrict access to the application and data files
+
+### Security Checklist
+- [ ] API key stored in environment variable
+- [ ] No hardcoded credentials in code
+- [ ] `.env` file added to `.gitignore`
+- [ ] Proper file permissions set
+- [ ] Regular API key rotation
+- [ ] Secure deployment practices
+
+## Development
+
+### Running Tests
+
+The application includes comprehensive unit tests:
+
+```bash
+python tests.py
+```
+
+### Security Validation
+
+Run the security check to ensure no sensitive data is exposed:
+
+```bash
+python security_check.py
+```
+
+This will verify:
+- No hardcoded credentials
+- Proper environment variable usage
+- No sensitive files present
+- Correct .gitignore configuration
+- Secure file permissions
+
+### Code Structure
+
+The modular design makes it easy to:
+- **Test individual components** in isolation
+- **Extend functionality** by adding new modules
+- **Maintain code** with clear separation of concerns
+- **Debug issues** with focused component testing
+
+### Adding New Features
+
+1. **Data Models**: Add new models in `models.py`
+2. **Business Logic**: Extend appropriate modules (`ai_interviewer.py`, `report_generator.py`, etc.)
+3. **UI Components**: Add new interface elements in `ui_interface.py`
+4. **Configuration**: Add new settings in `config.py`
 
 ## Contributing
 

@@ -47,8 +47,51 @@ def check_openai_api_key():
         print("\nGet your API key from: https://platform.openai.com/api-keys")
         return False
     else:
-        print("✅ OPENAI_API_KEY is set")
+        # Check if it looks like a valid OpenAI API key format
+        if api_key.startswith('sk-') and len(api_key) > 20:
+            print("✅ OPENAI_API_KEY is set and appears to be valid")
+        else:
+            print("⚠️  OPENAI_API_KEY is set but may not be in the correct format")
+            print("   Expected format: sk-... (starts with 'sk-' and is longer than 20 characters)")
         return True
+
+def check_security_files():
+    """Check for potential security issues"""
+    print("\n🔒 Checking for security issues...")
+    
+    # Check for .env file
+    if os.path.exists('.env'):
+        print("⚠️  .env file found - make sure it's in .gitignore")
+    else:
+        print("✅ No .env file found")
+    
+    # Check for other potential credential files
+    sensitive_files = [
+        'secrets.json', 'config.json', 'api_keys.txt', 
+        'credentials.txt', 'openai_api_key.txt'
+    ]
+    
+    found_sensitive = False
+    for file in sensitive_files:
+        if os.path.exists(file):
+            print(f"⚠️  Found potentially sensitive file: {file}")
+            found_sensitive = True
+    
+    if not found_sensitive:
+        print("✅ No sensitive files found")
+    
+    # Check .gitignore
+    if os.path.exists('.gitignore'):
+        with open('.gitignore', 'r') as f:
+            gitignore_content = f.read()
+            if '.env' in gitignore_content:
+                print("✅ .env is in .gitignore")
+            else:
+                print("⚠️  .env not found in .gitignore")
+    else:
+        print("⚠️  No .gitignore file found")
+    
+    return True
 
 def create_directories():
     """Create necessary directories"""
@@ -112,6 +155,9 @@ def main():
     # Check API key
     api_key_ok = check_openai_api_key()
     
+    # Check security
+    check_security_files()
+    
     print("\n" + "=" * 50)
     if api_key_ok:
         print("🎉 Setup completed successfully!")
@@ -124,6 +170,7 @@ def main():
         print("Please set your OPENAI_API_KEY before running the application")
     
     print("\n📚 For more information, see README.md")
+    print("🔒 For security best practices, see the Security Considerations section in README.md")
 
 if __name__ == "__main__":
     main() 
